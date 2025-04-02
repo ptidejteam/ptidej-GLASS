@@ -8,4 +8,5 @@ public interface IMethod {
 	public String[] getParameterNames();
 	public String getReturnType();
 	public boolean isConstructor();
+	public boolean isPublic();
 }

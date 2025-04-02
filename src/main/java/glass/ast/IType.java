@@ -5,6 +5,7 @@ public interface IType {
 	public boolean isAnonymous();
 	public boolean isInterface();
 	public IMethod[] getMethods();
+	public String getPackage();
 	
 	/*
 	 * Returns the fields declared by this type in the order in which they appear
@@ -74,4 +75,8 @@ public interface IType {
 	public IType[] getAllSubtypes();
 	public IType[] getAllSupertypes();
 	public IType[] getImplementingClasses();
+	public void addSuperInterface(IType superInterface);
+	public void changeSuperclass(IType newSuperclass);
+	public void addSubType(IType subType);
+	public boolean hasSamePublicInterface(IType comparedType);
 }

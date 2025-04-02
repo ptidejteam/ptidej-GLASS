@@ -6,12 +6,6 @@
   <artifactId>glass-core</artifactId>
   <version>0.4</version>
   <packaging>jar</packaging>
-  
-  <parent>
-	<groupId>net.ptidej</groupId>
-	<artifactId>all-ptidej</artifactId>
-	<version>1.0.0</version>
-  </parent>
 
 
   <name>GLASS</name>
@@ -28,5 +22,11 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+		<groupId>fr.inria.gforge.spoon</groupId>
+    	<artifactId>spoon-core</artifactId>
+    	<!-- See rendered release value at http://spoon.gforge.inria.fr/ -->
+    	<version>11.2.0</version>
+	</dependency>
   </dependencies>
 </project>
