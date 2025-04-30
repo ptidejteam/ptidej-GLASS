@@ -1,5 +1,8 @@
 package glass.refactoring;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -11,10 +14,18 @@ import glass.ast.IType;
 import spoon.reflect.declaration.CtInterface;
 import spoon.reflect.declaration.CtMethod;
 
+
+/**
+ * Class meant to be used when creating a new interface using Spoon.
+ * The created interface is meant to be a 'clone' of a concrete class, meaning that
+ * they share the same public methods and the new interface is implemented by the latter.
+ * 
+ * @author Luca Scistri
+ */
 public class SpoonInterface implements IType{
 	
 	private CtInterface newInterface;
-	private IMethod[] methods;
+	private IMethod[] methods; // contains only local methods
 	private IType baseclass;
 	private IType[] superTypes; // non recursive
 	private IType[] subTypes; // non recursive
@@ -42,7 +53,14 @@ public class SpoonInterface implements IType{
 
 	@Override
 	public IMethod[] getMethods() {
-		return this.methods;
+		Set<IMethod> allMethods = new HashSet<IMethod>();
+		allMethods.addAll(Arrays.asList(this.getLocalMethods()));
+		// Since we have an interface, its supertypes are also interfaces
+		// thus we don't need to check the visibility of the methods
+		for (IType superType : this.getAllSupertypes()) {
+			allMethods.addAll(Arrays.asList(superType.getMethods()));
+		}
+		return (IMethod[]) allMethods.toArray();
 	}
 
 	@Override
@@ -102,7 +120,7 @@ public class SpoonInterface implements IType{
 
 	@Override
 	public void changeSuperclass(IType newSuperclass) {
-		// do nothing, should throw exception in the future
+		// do nothing, should throw exception in the future?
 	}
 
 	@Override
@@ -148,6 +166,11 @@ public class SpoonInterface implements IType{
 		
 		return i == nbPublicMethods;
 		
+	}
+
+	@Override
+	public IMethod[] getLocalMethods() {
+		return this.methods;
 	}
 
 }

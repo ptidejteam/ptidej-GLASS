@@ -1,13 +1,34 @@
 package glass.ast;
 
+/**
+ * Interface modeling a type in GLASS
+ * 
+ * @author Luca Scistri
+ */
 public interface IType {
 
 	public boolean isAnonymous();
 	public boolean isInterface();
+	
+	/**
+	 * Returns all local methods + inherited methods
+	 * @return
+	 */
 	public IMethod[] getMethods();
+	
+	/**
+	 * Returns only the methods that are defined/redefined within the type
+	 * @return
+	 */
+	public IMethod[] getLocalMethods();
+	
+	/**
+	 * Returns the complete name of the package where the type is declared
+	 * @return
+	 */
 	public String getPackage();
 	
-	/*
+	/**
 	 * Returns the fields declared by this type in the order in which they appear
 	 * in the source or class file. For binary types, this includes synthetic fields.
 	 * This does not include the implicit fields representing record components.

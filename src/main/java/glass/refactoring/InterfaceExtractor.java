@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.maven.model.Model;
 
@@ -18,6 +20,7 @@ import spoon.reflect.CtModel;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtInterface;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtModifiable;
 import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
@@ -26,6 +29,11 @@ import spoon.reflect.visitor.Filter;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.reflect.visitor.filter.TypeFilter;
 
+/**
+ * Class responsible for extracting new interface from a given feature/class
+ * 
+ * @author Luca Scistri
+ */
 public class InterfaceExtractor implements IInterfaceExtractor{
 	
 	private Launcher launcher;
@@ -39,7 +47,7 @@ public class InterfaceExtractor implements IInterfaceExtractor{
 			launcher.getEnvironment().setNoClasspath(true);
 			launcher.addInputResource(projectDirectory);
 		}
-		launcher.getEnvironment().setNoClasspath(true);
+		launcher.getEnvironment().setNoClasspath(false);
 		launcher.getEnvironment().setAutoImports(true);
 		launcher.buildModel();
 		launcher.setSourceOutputDirectory(new File(projectDirectory));
@@ -129,20 +137,18 @@ public class InterfaceExtractor implements IInterfaceExtractor{
 	public IType extractInterfaceFromClass(IType baseclass) {
 		CtModel model = launcher.getModel();
 		
-		CtClass spoonBaseclass = model.
+		CtClass spoonBaseClass = model.
 				filterChildren(new NamedElementFilter<CtPackage>(CtPackage.class, baseclass.getPackage())).
 				filterChildren(new NamedElementFilter<CtClass>(CtClass.class, baseclass.getElementName())).first();
 
-		List<CtMethod> methods = model.
-				filterChildren(new NamedElementFilter<CtPackage>(CtPackage.class, baseclass.getPackage())).
-				filterChildren(new NamedElementFilter<CtClass>(CtClass.class, baseclass.getElementName())).
-				filterChildren(new TypeFilter<CtMethod>(CtMethod.class)).
-				filterChildren(new Filter<CtMethod>() {
-					@Override
-					public boolean matches(CtMethod element) {
-						return element.isPublic();
-					}
-				}).list();
+		Set<CtMethod<?>> allMethods = spoonBaseClass.getAllMethods();
+		
+		Set<CtMethod<?>> allPublicMethods = new HashSet<CtMethod<?>>();
+		for (CtMethod method : allMethods) {
+			if (method.isPublic()) {
+				allPublicMethods.add(method);
+			}
+		}
 		
 		Factory factory = launcher.getFactory();
 		
@@ -152,7 +158,7 @@ public class InterfaceExtractor implements IInterfaceExtractor{
 		
 		List<CtMethod> newInterfaceMethods = new ArrayList<CtMethod>();
 		
-		for (CtMethod method: methods) {
+		for (CtMethod method: allPublicMethods) {
 			CtMethod<?> clonedMethod = Refactoring.copyMethod(method);
 			clonedMethod.setBody(null);
 			clonedMethod.removeModifier(ModifierKind.FINAL);
@@ -161,7 +167,7 @@ public class InterfaceExtractor implements IInterfaceExtractor{
 		}
 		
 		CtTypeReference<?> interfaceRef = factory.Type().createReference(newInterface.getQualifiedName());
-		spoonBaseclass.addSuperInterface(interfaceRef);
+		spoonBaseClass.addSuperInterface(interfaceRef);
 		
 		return new SpoonInterface(newInterface, newInterfaceMethods, baseclass);
 	}

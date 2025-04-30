@@ -2,6 +2,12 @@ package glass.ast;
 
 import java.util.Collection;
 
+/**
+ * A project is a type from which we can access all the types
+ * that are defined in the project to be analyzed by GLASS
+ * 
+ * @author Luca Scistri
+ */
 public interface IProject {
 
 	public Collection<IType> getDefinedTypes();

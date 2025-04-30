@@ -58,4 +58,9 @@ public class SpoonMethod implements IMethod{
 		return this.method.isPublic();
 	}
 
+	@Override
+	public boolean isProtected() {
+		return this.method.isProtected();
+	}
+
 }
