@@ -1,4 +1,4 @@
-package glass.refactoring;
+package glass.refactoring.impl;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -13,6 +13,7 @@ import org.apache.maven.model.Model;
 
 import glass.ast.IType;
 import glass.lattice.model.ILatticeNode;
+import glass.refactoring.IInterfaceExtractor;
 import spoon.Launcher;
 import spoon.MavenLauncher;
 import spoon.refactoring.Refactoring;
@@ -62,7 +63,7 @@ public class InterfaceExtractor implements IInterfaceExtractor{
 	 * @param feature
 	 * @return Corresponding interfaces from the upper hierarchy
 	 */
-	public Set<IType> extractInterfaceFromFeature(ILatticeNode feature) {
+	public Set<IType> extractInterfacesFromFeature(ILatticeNode feature) {
 		Set<Object> intent = feature.getIntent();
 		
 		Set<IType> classesInIntent = new HashSet<IType>();

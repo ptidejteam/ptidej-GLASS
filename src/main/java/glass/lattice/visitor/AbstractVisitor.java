@@ -87,6 +87,7 @@ public abstract class AbstractVisitor implements IVisitor{
 					visitLatticeNode(parent, direction);
 				}
 			}
+			break;
 		default:
 			System.out.println(" Houston! we have a problem: an alien visitor with no direction!");
 			break;

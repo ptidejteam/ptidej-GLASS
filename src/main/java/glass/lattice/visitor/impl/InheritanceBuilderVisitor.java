@@ -1,5 +1,6 @@
 package glass.lattice.visitor.impl;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import glass.ast.IMethod;
@@ -18,7 +19,36 @@ public class InheritanceBuilderVisitor extends AbstractVisitor implements IVisit
 	
 	private Set<Object> visitedTypes;
 	private Set<Object> visitedMethods;
+	
+	@Override
+	public void processNode(ILatticeNode node) {
+		Set<ILatticeNode> parents = node.getParents();
+		Set<Object> currentClasses = node.getExtent();
+		for (ILatticeNode parent : parents) {
+			Set<Object> classes = parent.getExtent();
+			Set<Object> newClasses = new HashSet<Object>();
+			for (Object clasz : classes) {
+				if (!currentClasses.contains(clasz)) {
+					newClasses.add(clasz);
+				}
+			}
+			parent.setExtent(newClasses);
+		}
+		
+		Set<ILatticeNode> children = node.getChildren();
+		Set<Object> currentMethods = node.getIntent();
+		for(ILatticeNode child : children) {
+			Set<Object> methods = child.getIntent();
+			Set<Object> newMethods = new HashSet<Object>();
+			for (Object method : methods) {
+				if (!currentMethods.contains(method)) {
+					newMethods.add(method);
+				}
+			}
+			child.setIntent(newMethods);
+		}
 
+	/*
 	@Override
 	public void processNode(ILatticeNode node) {
 		switch (this.getCurrentVisitDirection()) {
@@ -48,6 +78,7 @@ public class InheritanceBuilderVisitor extends AbstractVisitor implements IVisit
 			System.out.println("Problem! No direction for current traversal.");
 			break;
 		}
+		*/
 	}
 
 }

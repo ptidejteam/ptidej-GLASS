@@ -294,6 +294,7 @@ public class ReverseInheritanceRelationBuilder implements IRelationBuilder{
 		// add the methods defined in <code>type</code>
 		if (type == null) {
 			System.out.println("How come type is null?");
+			return null;
 		}
 
 		// next, check if type is anonymous

@@ -28,5 +28,10 @@
     	<!-- See rendered release value at http://spoon.gforge.inria.fr/ -->
     	<version>11.2.0</version>
 	</dependency>
+	<dependency>
+    	<groupId>guru.nidi</groupId>
+    	<artifactId>graphviz-java</artifactId>
+    	<version>0.18.1</version>
+	</dependency>
   </dependencies>
 </project>

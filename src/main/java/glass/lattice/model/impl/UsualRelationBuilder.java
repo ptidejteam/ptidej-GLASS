@@ -16,7 +16,7 @@ import glass.lattice.model.IRelationBuilder;
 
 /**
  * Class responsible for building the 'classical' binary relation, where each class is in relation with the
- * methods that are accessible from that class
+ * methods that are accessible from that class (be it directly or through inheritance)
  * 
  * @author Luca Scistri
  */
@@ -171,6 +171,7 @@ public class UsualRelationBuilder implements IRelationBuilder{
 		// add the methods defined in <code>type</code>
 		if (type == null) {
 			System.out.println("How come type is null?");
+			return null;
 		}
 
 		// get the methods defined in the type

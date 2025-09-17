@@ -1,4 +1,4 @@
-package glass.refactoring;
+package glass.refactoring.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
