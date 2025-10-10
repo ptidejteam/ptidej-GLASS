@@ -312,7 +312,7 @@ public class ReverseInheritanceRelationBuilder implements IRelationBuilder{
 		// defined by classes within the
 		// project, and then remove those methods that were first defined in
 		// classes OUTSIDE of the project
-		IMethod[] localMethods = type.getMethods();
+		IMethod[] localMethods = type.getLocalMethods();
 
 		Collection<IMethod> allMethods = new ArrayList<IMethod>();
 

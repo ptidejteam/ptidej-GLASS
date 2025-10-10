@@ -1,84 +1,103 @@
 package glass.lattice.visitor.impl;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import glass.ast.IMethod;
 import glass.ast.IType;
+import glass.lattice.model.ILattice;
 import glass.lattice.model.ILatticeNode;
+import glass.lattice.model.impl.Lattice;
 import glass.lattice.visitor.AbstractVisitor;
 import glass.lattice.visitor.IVisitor;
 
 /**
  * Visitor used to build the inheritance concept lattice from a 'normal' lattice
- * The lattice to be transformed should be visited from BOTH the top and bottom
+ * Some optimizations could (probably) still be done as we traverse the original lattice many times
  * 
  * @author Luca Scistri
  */
 public class InheritanceBuilderVisitor extends AbstractVisitor implements IVisitor {
 	
-	private Set<Object> visitedTypes;
-	private Set<Object> visitedMethods;
+	private ILattice resultInheritanceLattice;
+	private Map<ILatticeNode, ILatticeNode> originalToCloneMapping;
+	private ILattice originalLattice;
+	
+	
+	public InheritanceBuilderVisitor(ILattice originalLattice) {
+		this.resultInheritanceLattice = new Lattice();
+		this.originalLattice = originalLattice;
+		this.originalToCloneMapping = new HashMap<ILatticeNode, ILatticeNode>();
+	}
 	
 	@Override
 	public void processNode(ILatticeNode node) {
-		Set<ILatticeNode> parents = node.getParents();
-		Set<Object> currentClasses = node.getExtent();
-		for (ILatticeNode parent : parents) {
-			Set<Object> classes = parent.getExtent();
-			Set<Object> newClasses = new HashSet<Object>();
-			for (Object clasz : classes) {
-				if (!currentClasses.contains(clasz)) {
-					newClasses.add(clasz);
+		ILatticeNode cloneCurrentNode = node.copy();
+		this.originalToCloneMapping.put(node, cloneCurrentNode);
+		
+		Set<Object> clonedMethods = cloneCurrentNode.getIntent();
+		Set<Object> clonedClasses = cloneCurrentNode.getExtent();
+		
+		for (ILatticeNode parent : node.getParents()) {
+			for (Object method : parent.getIntent()) {
+				if (clonedMethods.contains(method)) {
+					clonedMethods.remove(method);
 				}
 			}
-			parent.setExtent(newClasses);
+		}
+		for (ILatticeNode child : node.getChildren()) {
+			for (Object clasz : child.getExtent()) {
+				if (clonedClasses.contains(clasz)) {
+					clonedClasses.remove(clasz);
+				}
+			}
 		}
 		
-		Set<ILatticeNode> children = node.getChildren();
-		Set<Object> currentMethods = node.getIntent();
-		for(ILatticeNode child : children) {
-			Set<Object> methods = child.getIntent();
-			Set<Object> newMethods = new HashSet<Object>();
-			for (Object method : methods) {
-				if (!currentMethods.contains(method)) {
-					newMethods.add(method);
-				}
-			}
-			child.setIntent(newMethods);
-		}
+		cloneCurrentNode.setIntent(clonedMethods);
+		cloneCurrentNode.setExtent(clonedClasses);
+	}
+	
+	private void buildInheritanceLattice() {
+		ILatticeNode top = this.originalLattice.getTop();
+		ILatticeNode clonedTop = this.originalToCloneMapping.get(top);
+		this.resultInheritanceLattice.setTop(clonedTop);
+		
+		ILatticeNode bottom = this.originalLattice.getBottom();
+		ILatticeNode clonedBottom = this.originalToCloneMapping.get(bottom);
+		this.resultInheritanceLattice.setBottom(clonedBottom);
 
-	/*
-	@Override
-	public void processNode(ILatticeNode node) {
-		switch (this.getCurrentVisitDirection()) {
-		case TopDown:
-			// When visiting from the top, we look to delete methods
-			// that we've already encountered
-			Set<Object> currentMethods = node.getIntent();
-			for (Object method : currentMethods) {
-				if (visitedMethods.contains(method)) {
-					node.removeFromIntent(method);
-				} else {
-					visitedMethods.add(method);
-				}
-			}
-			break;
-		case BottomUp:
-			// This time, we're looking for types
-			Set<Object> currentTypes = node.getExtent();
-			for (Object type : currentTypes) {
-				if (visitedTypes.contains(type)) {
-					node.removeFromExtent(type);
-				} else {
-					visitedTypes.add(type);
-				}
-			}
-		default:
-			System.out.println("Problem! No direction for current traversal.");
-			break;
+		for (ILatticeNode child : top.getChildren()) {
+			buildChildrenRelation(child, top);
 		}
-		*/
+		for (ILatticeNode parent : bottom.getParents()) {
+			buildParentRelation(parent, bottom);
+		}
+		
+	}
+	
+	private void buildChildrenRelation(ILatticeNode node, ILatticeNode parent) {
+		ILatticeNode clonedParent = this.originalToCloneMapping.get(parent);
+		ILatticeNode clonedNode = this.originalToCloneMapping.get(node);
+		clonedParent.addChild(clonedNode);
+		for (ILatticeNode child : node.getChildren()) {
+			buildChildrenRelation(child, node);
+		}
+	}
+	
+	private void buildParentRelation(ILatticeNode node, ILatticeNode child) {
+		ILatticeNode clonedChild = this.originalToCloneMapping.get(child);
+		ILatticeNode clonedNode = this.originalToCloneMapping.get(node);
+		clonedChild.addParent(clonedNode);
+		for (ILatticeNode parent : node.getParents()) {
+			buildParentRelation(parent, node);
+		}
+	}
+	
+	public ILattice getInheritanceLattice() {
+		this.buildInheritanceLattice();
+		return this.resultInheritanceLattice;
 	}
 
 }
