@@ -9,6 +9,13 @@ package glass.ast;
 public interface IMethod {
 	
 	public String getSignature();
+	
+	/**
+	 * Returns the full signature of the method, i.e., the signature with the package
+	 * and the class that implements the method.
+	 * @return The full signature of the method
+	 */
+	public String getFullSignature();
 	public boolean isSimilar(IMethod comparedMethod);
 	public String getElementName();
 	public String[] getParameterNames();
