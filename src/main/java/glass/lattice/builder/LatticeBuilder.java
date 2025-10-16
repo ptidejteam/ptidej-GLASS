@@ -158,7 +158,7 @@ public class LatticeBuilder implements ILatticeBuilder{
 						// 27 FOR j:0 TO ||int|| -1
 						SortedSet<Integer> newSortedCardinalities = newBucketsVisitor.getBucketSizesSorted();
 						SortedSet<Integer> newSortedCardinalitiesLessThanIntersectionSize = newSortedCardinalities
-								.headSet(new Integer(intersectionSize));
+								.headSet(Integer.valueOf(intersectionSize));
 						for (Integer newBucketSize : newSortedCardinalitiesLessThanIntersectionSize) {
 							Set<ILatticeNode> newBucketOfCurrentSize = newBucketsVisitor.getBucketForSize(newBucketSize);
 							// 28 FOR each Ha e C'[j]
