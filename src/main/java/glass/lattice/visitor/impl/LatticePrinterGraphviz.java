@@ -62,8 +62,7 @@ public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
 		final Set<Object> nodeIntent = latticeNode.getIntent();
 		final Iterator<Object> itIntent = nodeIntent.iterator();
 		while (itIntent.hasNext()) {
-			IMethod currentMethod = (IMethod) itIntent.next();
-			builder.append(currentMethod.getSignature() + "\n");
+			builder.append(itIntent.next() + "\n");
 		}
 		return builder.toString();
 	}
