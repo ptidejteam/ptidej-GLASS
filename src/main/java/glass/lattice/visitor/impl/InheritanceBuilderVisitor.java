@@ -99,5 +99,9 @@ public class InheritanceBuilderVisitor extends AbstractVisitor implements IVisit
 		this.buildInheritanceLattice();
 		return this.resultInheritanceLattice;
 	}
+	
+	public Map<ILatticeNode, ILatticeNode> getOriginalToCloneMapping() {
+		return this.originalToCloneMapping;
+	}
 
 }

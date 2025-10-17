@@ -3,6 +3,7 @@ package glass.lattice.visitor.impl;
 import glass.ast.IMethod;
 import glass.ast.IType;
 import glass.lattice.model.ILatticeNode;
+import glass.lattice.model.impl.Attribute;
 import glass.lattice.visitor.AbstractVisitor;
 import glass.lattice.visitor.IVisitor;
 import guru.nidi.graphviz.attribute.Font;
@@ -62,7 +63,11 @@ public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
 		final Set<Object> nodeIntent = latticeNode.getIntent();
 		final Iterator<Object> itIntent = nodeIntent.iterator();
 		while (itIntent.hasNext()) {
-			builder.append(itIntent.next() + "\n");
+			Attribute attr = (Attribute) itIntent.next();
+			if (attr.isAdhoc()) {
+				builder.append("ADHOC ");
+			}
+			builder.append(attr + "\n");
 		}
 		return builder.toString();
 	}

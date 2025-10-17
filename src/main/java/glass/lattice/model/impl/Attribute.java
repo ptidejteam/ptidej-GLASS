@@ -10,6 +10,7 @@ public class Attribute {
 	private final boolean isLeaf;
 	private final boolean isExtendedAttribute;
 	private final IType type;
+	private boolean isAdhoc = false;
 	
 	public Attribute(String signature, boolean isRoot, boolean isLeaf, boolean isExtendedAttribute, IType relatedType) {
 		this.name = signature;
@@ -42,6 +43,14 @@ public class Attribute {
 	// Todo : raise exception when type is null
 	public IType getType() {
 		return this.type;
+	}
+	
+	public void setAdhoc(boolean isAdhoc) {
+		this.isAdhoc = isAdhoc;
+	}
+	
+	public boolean isAdhoc() {
+		return this.isAdhoc;
 	}
 	
 	@Override
