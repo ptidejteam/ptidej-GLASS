@@ -140,7 +140,7 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 		IType[] subTypes = type.getAllSubtypes();
 		Set<String> localInterface = this.localInterfaces.get(type);
 		for (IType subType : subTypes) {
-			if (!this.normalAttrMap.containsKey(subType)) {
+			if (!this.normalAttrMap.containsKey(subType)) { // ugly :(
 				continue;
 			}
 			Set<Attribute> subTypeNormalAttributes = this.normalAttrMap.get(subType);
@@ -171,6 +171,10 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 	
 	private String hashTypeAttribute(IType type, Attribute attr) {
 		return type.getFullyQualifiedName() + attr.getName();
+	}
+	
+	public Map<IType, Set<String>> getLocalInterfaces() {
+		return this.localInterfaces;
 	}
 	
 }

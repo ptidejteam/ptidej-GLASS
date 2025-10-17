@@ -8,6 +8,8 @@ import java.util.Set;
 import glass.ast.IMethod;
 import glass.ast.IType;
 import glass.lattice.model.ILatticeNode;
+import glass.lattice.model.impl.Attribute;
+import glass.lattice.model.impl.ExtendedRIRBuilder;
 import glass.lattice.model.impl.ReverseInheritanceRelationBuilder;
 import glass.lattice.visitor.AbstractVisitor;
 import glass.lattice.visitor.IVisitor;
@@ -17,11 +19,20 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 	 * we need a reference to the builder that built the relation to have access to the local
 	 * interfaces and the cumulative interfaces of the various nodes
 	 */
-	private ReverseInheritanceRelationBuilder relationBuilder;
+	private ExtendedRIRBuilder relationBuilder;
 	
 	
-	public ComplexPurgeExtentsVisitor (ReverseInheritanceRelationBuilder builder){
+	public ComplexPurgeExtentsVisitor (ExtendedRIRBuilder builder){
 		relationBuilder = builder;
+	}
+	
+	private Set<String> extractInterfaceFromNode(ILatticeNode node) {
+		Set<String> intentInterface = new HashSet<String>();
+		for (Object objIntent : node.getIntent()) {
+			Attribute attr = (Attribute) objIntent;
+			intentInterface.add(attr.getName());
+		}
+		return intentInterface;
 	}
 
 	/*
@@ -83,10 +94,10 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 			// independent occurrence.
 			for (Object element: intersection){
 				IType type = (IType)element;
-				IMethod [] localDomainInterface = relationBuilder.getLocalDomainInterfaces().get(type);
+				Set<String> localDomainInterface = relationBuilder.getLocalInterfaces().get(type);
 				Set<Object> localDomainInterfaceAsSet = new HashSet<Object>();
 				localDomainInterfaceAsSet.addAll(Arrays.asList(localDomainInterface));
-				if (!localDomainInterfaceAsSet.containsAll(node.getIntent())){
+				if (!localDomainInterfaceAsSet.containsAll(this.extractInterfaceFromNode(node))){
 					// indeed, this is the case where we need to remove the element from the extent
 					extent.remove(element);
 				} else {
