@@ -37,11 +37,13 @@ public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
 	private String graphName;
 	private Map<ILatticeNode, MutableNode> graphvizNodes;
 	private int conceptCounter;
+	private boolean excludeTop;
 	
-	public LatticePrinterGraphviz(String graphName) {
+	public LatticePrinterGraphviz(String graphName, boolean excludeTop) {
 		this.graphvizNodes = new HashMap<ILatticeNode, MutableNode>();
 		this.conceptCounter = 0;
 		this.graphName = graphName;
+		this.excludeTop = excludeTop;
 		this.latticeGraph = mutGraph(graphName).setDirected(true)
 				.graphAttrs().add(Rank.dir(RankDir.BOTTOM_TO_TOP))
 				.nodeAttrs().add(Font.name("arial"));
@@ -100,8 +102,10 @@ public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
 		if (this.graphvizNodes.containsKey(latticeNode)) { // probably useless, but we never know
 			return;
 		}
-		
-		MutableNode startingNode = this.createNode(latticeNode);
+		MutableNode startingNode = null;
+		if (!this.excludeTop) {
+			startingNode = this.createNode(latticeNode);
+		}
 		
 		for (ILatticeNode child : latticeNode.getChildren()) {
 			this.visitLatticeNode(child, direction, startingNode);
@@ -112,12 +116,16 @@ public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
 	private void visitLatticeNode(ILatticeNode latticeNode, Direction direction, MutableNode parent) {
 		if (this.graphvizNodes.containsKey(latticeNode)) {
 			MutableNode currentNode = this.graphvizNodes.get(latticeNode);
-			this.linkNodes(currentNode, parent);
+			if (parent != null) {
+				this.linkNodes(currentNode, parent);
+			}
 			return;
 		}
 		
 		MutableNode currentNode = this.createNode(latticeNode);
-		this.linkNodes(currentNode, parent);
+		if (parent != null) {
+			this.linkNodes(currentNode, parent);
+		}
 		
 		for (ILatticeNode child : latticeNode.getChildren()) {
 			this.visitLatticeNode(child, direction, currentNode);
