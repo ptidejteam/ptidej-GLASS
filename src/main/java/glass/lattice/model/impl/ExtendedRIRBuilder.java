@@ -36,6 +36,7 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 		this.reverseInheritedAttrMap = new HashMap<Object, Set<Attribute>>();
 	}
 
+	/*
 	@Override
 	public IRelation buildRelationFrom(IProject project) {
 		this.definedTypes = project.getDefinedTypes();
@@ -50,6 +51,49 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 		}
 		
 		return extendedRelation;
+	}
+	*/
+	
+	@Override
+	public IRelation buildRelationFrom(IProject project) {
+		this.definedTypes = project.getDefinedTypes();
+		for (IType type : this.definedTypes) {
+			this.addTypeAttributesToRelation(type);
+		}
+		for (IType type : this.definedTypes) {
+			if (type.getLocalMethods().length == 0) {
+				continue;
+			}
+			for (Attribute normalAttr : this.normalAttrMap.get(type)) {
+				this.propagateAttrUpward(type, normalAttr);
+			}
+			for (Attribute extendedAttr : this.extendedAttrMap.get(type)) {
+				this.propagateAttrUpward(type, extendedAttr);
+				this.propagateAttrDownward(type, extendedAttr);
+			}
+		}
+		return this.extendedRelation;
+	}
+	
+	private void propagateAttrUpward(IType type, Attribute attr) {
+		for (IType superType : type.getAllSupertypes()) {
+			this.addToAttrMap(superType, attr, inheritedAttrMap);
+			this.extendedRelation.addRelation(superType, attr);
+		}
+	}
+	
+	private void propagateAttrDownward(IType type, Attribute attr) {
+		Attribute normalAttr = this.signatureAttrMap.get(attr.getName());
+		for (IType subType : type.getAllSubtypes()) {
+			if (subType.getLocalMethods().length == 0) {
+				continue;
+			}
+			Set<Attribute> normalAttrSet = this.normalAttrMap.get(subType);
+			if (normalAttrSet.contains(normalAttr)) {
+				this.addToAttrMap(subType, attr, inheritedAttrMap);
+				this.extendedRelation.addRelation(subType, attr);
+			}
+		}
 	}
 	
 	private void addToAttrMap(Object key, Attribute attr, Map<Object, Set<Attribute>> attrMap) {
