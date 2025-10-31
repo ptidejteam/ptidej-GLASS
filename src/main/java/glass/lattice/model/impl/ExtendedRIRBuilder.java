@@ -133,8 +133,8 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 		String signature = method.getSignature();
 		IType[] subTypes = type.getAllSubtypes();
 		IType[] superTypes = type.getAllSupertypes();
-		boolean isRoot = this.detectDuplicateSignature(signature, subTypes);
-		boolean isLeaf = this.detectDuplicateSignature(signature, superTypes);
+		boolean isRoot = this.detectDuplicateSignature(signature, superTypes);
+		boolean isLeaf = this.detectDuplicateSignature(signature, subTypes);
 		
 		final Attribute extendedAttr = new Attribute(signature, isRoot, isLeaf, true, type);
 		this.addToAttrMap(type, extendedAttr, extendedAttrMap);
