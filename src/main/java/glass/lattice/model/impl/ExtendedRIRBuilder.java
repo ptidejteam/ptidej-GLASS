@@ -221,4 +221,12 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 		return this.localInterfaces;
 	}
 	
+	public Set<Attribute> getLocalAttributes(IType type) {
+		Set<Attribute> localAttributes = new HashSet<Attribute>();
+		for (String signature : this.localInterfaces.get(type)) {
+			localAttributes.add(this.signatureAttrMap.get(signature));
+		}
+		return localAttributes;
+	}
+	
 }

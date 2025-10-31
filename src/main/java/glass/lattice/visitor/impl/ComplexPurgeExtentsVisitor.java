@@ -26,12 +26,12 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		relationBuilder = builder;
 	}
 	
-	private Set<String> extractInterfaceFromNode(ILatticeNode node) {
-		Set<String> intentInterface = new HashSet<String>();
+	private Set<Attribute> extractInterfaceFromNode(ILatticeNode node) {
+		Set<Attribute> intentInterface = new HashSet<Attribute>();
 		for (Object objIntent : node.getIntent()) {
 			Attribute attr = (Attribute) objIntent;
-			if (!attr.isAdhoc()) {
-				intentInterface.add(attr.getName());
+			if (!attr.isExtendedAttribute()) {
+				intentInterface.add(attr);
 			}
 		}
 		return intentInterface;
@@ -96,10 +96,8 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 			// independent occurrence.
 			for (Object element: intersection){
 				IType type = (IType) element;
-				Set<String> localDomainInterface = relationBuilder.getLocalInterfaces().get(type);
-				Set<Object> localDomainInterfaceAsSet = new HashSet<Object>();
-				localDomainInterfaceAsSet.addAll(Arrays.asList(localDomainInterface));
-				if (!localDomainInterfaceAsSet.containsAll(this.extractInterfaceFromNode(node))){
+				Set<Attribute> localDomainInterface = relationBuilder.getLocalAttributes(type);
+				if (!localDomainInterface.containsAll(this.extractInterfaceFromNode(node))){
 					// indeed, this is the case where we need to remove the element from the extent
 					extent.remove(element);
 				} else {
