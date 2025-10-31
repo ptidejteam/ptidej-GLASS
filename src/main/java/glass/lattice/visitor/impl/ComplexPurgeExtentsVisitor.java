@@ -30,7 +30,9 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		Set<String> intentInterface = new HashSet<String>();
 		for (Object objIntent : node.getIntent()) {
 			Attribute attr = (Attribute) objIntent;
-			intentInterface.add(attr.getName());
+			if (!attr.isAdhoc()) {
+				intentInterface.add(attr.getName());
+			}
 		}
 		return intentInterface;
 	}
@@ -93,7 +95,7 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 			// of its children, but has them independently, and should be counted as an
 			// independent occurrence.
 			for (Object element: intersection){
-				IType type = (IType)element;
+				IType type = (IType) element;
 				Set<String> localDomainInterface = relationBuilder.getLocalInterfaces().get(type);
 				Set<Object> localDomainInterfaceAsSet = new HashSet<Object>();
 				localDomainInterfaceAsSet.addAll(Arrays.asList(localDomainInterface));
