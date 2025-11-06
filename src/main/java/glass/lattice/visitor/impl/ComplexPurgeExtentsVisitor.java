@@ -36,6 +36,23 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		}
 		return intentInterface;
 	}
+	
+	private Set<Attribute> getInterfaceOutsideExtent(IType type, Set<Object> extent) {
+		Set<Attribute> attributesOutsideExtent = this.relationBuilder.getLocalAttributes(type);
+		Set<Object> extentAndChild = new HashSet<Object>();
+		extentAndChild.addAll(extent);
+		// To make sure we get independent occurrences, we have to be
+		// completely separated from the extent
+		for (IType subType : type.getDirectSubTypes()) {
+			if (extentAndChild.contains(subType)) {
+				extentAndChild.addAll(Arrays.asList(subType.getAllSubtypes()));
+				continue;
+			}
+			attributesOutsideExtent.addAll(this.relationBuilder.getLocalAttributes(subType));
+			attributesOutsideExtent.addAll(this.getInterfaceOutsideExtent(subType, extent));
+		}
+		return attributesOutsideExtent;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -94,10 +111,15 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 			// it because it has the intent, NOT by virtue of cumulating the interfaces
 			// of its children, but has them independently, and should be counted as an
 			// independent occurrence.
+			// Luca 2025/11/06 : If we truly want to catch independent occurences, we should not
+			// only look at the local interface, we should look at the whole interface (that we obtain
+			// from reverse-inheritance),  considering only subclasses that are not in the extent. 
+			// The reason for that is that an ancestor can get the intent from subclasses that are not
+			// part of the extent.
 			for (Object element: intersection){
 				IType type = (IType) element;
-				Set<Attribute> localDomainInterface = relationBuilder.getLocalAttributes(type);
-				if (!localDomainInterface.containsAll(this.extractInterfaceFromNode(node))){
+				Set<Attribute> domainInterfaceNoExtent = this.getInterfaceOutsideExtent(type, extent);
+				if (!domainInterfaceNoExtent.containsAll(this.extractInterfaceFromNode(node))){
 					// indeed, this is the case where we need to remove the element from the extent
 					extent.remove(element);
 				} else {

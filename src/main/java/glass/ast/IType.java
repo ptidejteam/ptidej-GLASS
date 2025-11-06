@@ -96,6 +96,7 @@ public interface IType {
 	public IType[] getAllSubtypes();
 	public IType[] getAllSupertypes();
 	public IType[] getImplementingClasses();
+	public IType[] getDirectSubTypes();
 	public void addSuperInterface(IType superInterface);
 	public void changeSuperclass(IType newSuperclass);
 	public void addSubType(IType subType);
