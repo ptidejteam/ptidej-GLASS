@@ -3,6 +3,7 @@ package glass.lattice.visitor.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import glass.ast.IMethod;
@@ -20,10 +21,12 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 	 * interfaces and the cumulative interfaces of the various nodes
 	 */
 	private ExtendedRIRBuilder relationBuilder;
+	private Map<ILatticeNode, ILatticeNode> simplifiedConceptMapping;
 	
 	
-	public ComplexPurgeExtentsVisitor (ExtendedRIRBuilder builder){
+	public ComplexPurgeExtentsVisitor (ExtendedRIRBuilder builder, Map<ILatticeNode, ILatticeNode> simplifiedConceptMapping){
 		relationBuilder = builder;
+		this.simplifiedConceptMapping = simplifiedConceptMapping;
 	}
 	
 	private Set<Attribute> extractInterfaceFromNode(ILatticeNode node) {
@@ -43,9 +46,12 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		extentAndChild.addAll(extent);
 		// To make sure we get independent occurrences, we have to be
 		// completely separated from the extent
+		for (Object objExtent : extent) {
+			IType typeExtent = (IType) objExtent;
+			extentAndChild.addAll(Arrays.asList(typeExtent.getAllSubtypes()));
+		}
 		for (IType subType : type.getDirectSubTypes()) {
 			if (extentAndChild.contains(subType)) {
-				extentAndChild.addAll(Arrays.asList(subType.getAllSubtypes()));
 				continue;
 			}
 			attributesOutsideExtent.addAll(this.relationBuilder.getLocalAttributes(subType));
@@ -53,37 +59,21 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		}
 		return attributesOutsideExtent;
 	}
+	
+	private Set<Object> getIntroducedAdhocAttributes(ILatticeNode node) {
+		Set<Object> attrIntroduced = new HashSet<Object>();
+		ILatticeNode simplifiedNode = this.simplifiedConceptMapping.get(node);
+		for (Object obj : simplifiedNode.getIntent()) {
+			Attribute attr = (Attribute) obj;
+			if (attr.isAdhoc()) {
+				attrIntroduced.add(attr);
+			}
+		}
+		return attrIntroduced;
+	}
+	
+	private void reduceExtent(ILatticeNode node) {
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * ca.uqam.latece.aspects.extractor.lattice.visitors.impl.AbstractVisitor#
-	 * processNode(ca.uqam.latece.aspects.extractor.lattice.model.LatticeNode)
-	 */
-	@Override
-	/**
-	 * This method purges extents from classes that are ancestors of other
-	 * classes in the extent.
-	 * 
-	 * The way we do this: we iterate over the contents. For each class: 1) we
-	 * get its ancestors 2) we compute the intersection between the ancestors
-	 * and the extent 3) we remove the classes in the intersection from the
-	 * extent-- and from further consideration by the method
-	 * 
-	 * Note that going from class to ancestors is more efficient than going from
-	 * class to subclasses, for two reasons: 1) for most classes, there are more
-	 * descendants than ancestors to look at 2) if the descendants of a class
-	 * intersect with the extent, the only thing we know is that we must remove
-	 * the class, whereas with the ancestors, I can remove all the ancestors in
-	 * a single swoop
-	 * 
-	 * If the extent consists of a chain of n elements, by going from class to
-	 * ancestors, on the average, I can hope to perform the test n/2 times. With
-	 * the descendants, the worst case is the best case is n
-	 */
-	public void processNode(ILatticeNode node) {
-		
 		// first, if this is the top node, exit
 		if (node.getIntent().isEmpty()) return;
 
@@ -131,8 +121,66 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 				// classes to process
 				classesToProcess.remove(element);
 			}
+		}
+	}
+	
+	private void deleteAdhocAttributes(ILatticeNode node, Set<Object> attrToDelete) {
+		node.getIntent().removeAll(attrToDelete);
+		for (ILatticeNode child : node.getChildren()) {
+			this.deleteAdhocAttributes(child, attrToDelete);
+		}
+	}
 
-
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * ca.uqam.latece.aspects.extractor.lattice.visitors.impl.AbstractVisitor#
+	 * processNode(ca.uqam.latece.aspects.extractor.lattice.model.LatticeNode)
+	 */
+	@Override
+	/**
+	 * This method purges extents from classes that are ancestors of other
+	 * classes in the extent.
+	 * 
+	 * The way we do this: we iterate over the contents. For each class: 1) we
+	 * get its ancestors 2) we compute the intersection between the ancestors
+	 * and the extent 3) we remove the classes in the intersection from the
+	 * extent-- and from further consideration by the method
+	 * 
+	 * Note that going from class to ancestors is more efficient than going from
+	 * class to subclasses, for two reasons: 1) for most classes, there are more
+	 * descendants than ancestors to look at 2) if the descendants of a class
+	 * intersect with the extent, the only thing we know is that we must remove
+	 * the class, whereas with the ancestors, I can remove all the ancestors in
+	 * a single swoop
+	 * 
+	 * If the extent consists of a chain of n elements, by going from class to
+	 * ancestors, on the average, I can hope to perform the test n/2 times. With
+	 * the descendants, the worst case is the best case is n
+	 */
+	public void processNode(ILatticeNode node) {
+		Set<Object> extentCopy = new HashSet<Object>();
+		Set<Object> intentCopy = new HashSet<Object>();
+		extentCopy.addAll(node.getExtent());
+		intentCopy.addAll(node.getIntent());
+		this.reduceExtent(node);
+		// If we don't have a feature, we try to see if there are adhoc attributes introduced by the concept
+		// so we can still find an interesting subfeature that we would have missed otherwise
+		if (node.getExtent().size() == 1) {
+			node.setExtent(extentCopy);
+			Set<Object> reducedIntent = this.getIntroducedAdhocAttributes(node);
+			if (reducedIntent.size() > 0) {
+				node.setIntent(reducedIntent);
+				this.reduceExtent(node); // Since there is at least 1 new adhoc attribute, we are guaranteed to have extent > 1.
+				Set<Object> attrToDelete = new HashSet<Object>();
+				attrToDelete.addAll(intentCopy);
+				attrToDelete.removeAll(reducedIntent);
+				// We can delete the attributes from the parents, because if we don't find a feature
+				// with the big set of attributes, we won't find a feature in the children since they
+				// contain an even bigger set of attributes (I might be wrong?)
+				this.deleteAdhocAttributes(node, attrToDelete);
+			}
 		}
 	}
 }

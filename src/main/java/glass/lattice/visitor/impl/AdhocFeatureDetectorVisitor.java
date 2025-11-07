@@ -22,28 +22,33 @@ public class AdhocFeatureDetectorVisitor extends AbstractVisitor implements IVis
 	private Map<ILatticeNode, Boolean> adhocNodeMapping;
 	private Map<ILatticeNode, ILatticeNode> nodeToFeatureMapping;
 	private Set<ILatticeNode> visitedNodes;
+	private Map<ILatticeNode, ILatticeNode> simplifiedConceptMapping;
 	
-	public AdhocFeatureDetectorVisitor(ILattice processedLattice) {
+	public AdhocFeatureDetectorVisitor(ILattice processedLattice, Map<ILatticeNode, ILatticeNode> simplifiedConceptMapping) {
 		this.processedLattice = processedLattice;
 		this.featureSemiLattice = new Lattice();
 		this.adhocNodeMapping = new HashMap<ILatticeNode, Boolean>();
 		this.nodeToFeatureMapping = new HashMap<ILatticeNode, ILatticeNode>();
 		this.visitedNodes = new HashSet<ILatticeNode>();
+		this.simplifiedConceptMapping = simplifiedConceptMapping;
 	}
 
 	@Override
 	public void processNode(ILatticeNode node) {
 		int extentSize = node.getExtent().size();
-		if (extentSize > 1) {
+		if (extentSize > 1 && this.isAdhocCandidate(node)) {
 			Set<Attribute> intentAttributes= new HashSet<Attribute>();
 			Set<Object> intent= node.getIntent();
 			for (Object obj : intent) {
 				intentAttributes.add((Attribute) obj);
 			}
-			boolean isCandidate = false;
-			final Iterator<Attribute> itAttr = intentAttributes.iterator();
-			while (!isCandidate && itAttr.hasNext()) {
-				isCandidate = itAttr.next().isAdhoc();
+			boolean isCandidate = true;
+			int nbAdhocElement = this.countAdhoc(node);
+			for (ILatticeNode candidateSuperfeature : this.getPotentialSuperfeature(node)) {
+				if (candidateSuperfeature.getExtent().size() == extentSize) {
+					isCandidate = false;
+					break;
+				}
 			}
 			if (isCandidate) { // add feature to semi lattice
 				this.adhocNodeMapping.put(node, true);
@@ -82,6 +87,68 @@ public class AdhocFeatureDetectorVisitor extends AbstractVisitor implements IVis
 	public ILattice getFeatureSemiLattice() {
 		this.buildFeatureSemiLattice();
 		return this.featureSemiLattice;
+	}
+	
+	private int countAdhoc(ILatticeNode node) {
+		int nbAdhocElement = 0;
+		for (Object obj : node.getIntent()) {
+			Attribute attr = (Attribute) obj;
+			if (attr.isAdhoc()) {
+				nbAdhocElement++;
+			}
+		}
+		return nbAdhocElement;
+	}
+	private Set<Object> getAdhocElements(ILatticeNode node) {
+		Set<Object> adhocElements = new HashSet<Object>();
+		for (Object obj : node.getIntent()) {
+			Attribute attr = (Attribute) obj;
+			if (attr.isAdhoc()) {
+				adhocElements.add(attr);
+			}
+		}
+		return adhocElements;
+	}
+	
+	private boolean isAdhocCandidate(ILatticeNode node) {
+		// for a feature to be 'interesting' it has to have at least one more ad-hoc element,
+		// or it should introduce a new adhoc attribute
+		int nbIntroducedAdhocElement = this.countAdhoc(this.simplifiedConceptMapping.get(node));
+		if (nbIntroducedAdhocElement > 0) {
+			return true;
+		}
+		
+		int nbAdhocElement = this.countAdhoc(node);
+		int maxAdhocInParent = 0;
+		Set<ILatticeNode> parents = node.getParents();
+		for (ILatticeNode parent : parents) {
+			int counterAdhoc = 0;
+			for (Object obj : parent.getIntent()) {
+				Attribute attr = (Attribute) obj;
+				if (attr.isAdhoc()) {
+					counterAdhoc++;
+				}
+			}
+			if (counterAdhoc > maxAdhocInParent) {
+				maxAdhocInParent = counterAdhoc;
+			}
+		}
+		return !(nbAdhocElement==maxAdhocInParent);
+	}
+	
+	private Set<ILatticeNode> getPotentialSuperfeature(ILatticeNode node) {
+		Set<ILatticeNode> potentialSuperfeatures = new HashSet<ILatticeNode>();
+		Set<Object> adhocElements = this.getAdhocElements(node);
+		for (ILatticeNode child : node.getChildren()) {
+			Set<Object> adhocEltChild = this.getAdhocElements(child);
+			if (adhocEltChild.containsAll(adhocElements) && adhocEltChild.size()>adhocElements.size()) {
+				potentialSuperfeatures.add(child);
+			}
+			else {
+				potentialSuperfeatures.addAll(this.getPotentialSuperfeature(child));
+			}
+		}
+		return potentialSuperfeatures;
 	}
 
 }

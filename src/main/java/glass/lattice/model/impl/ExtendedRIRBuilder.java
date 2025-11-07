@@ -35,24 +35,6 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 		this.signatureAndTypeToInheritedAttrMap = new HashMap<Object, Set<Attribute>>();
 		this.reverseInheritedAttrMap = new HashMap<Object, Set<Attribute>>();
 	}
-
-	/*
-	@Override
-	public IRelation buildRelationFrom(IProject project) {
-		this.definedTypes = project.getDefinedTypes();
-		for (IType type : this.definedTypes) {
-			this.addTypeAttributesToRelation(type);
-		}
-		for (IType type : this.definedTypes) {
-			this.inheritExtendedAttributes(type);
-		}
-		for (IType type : this.definedTypes) {
-			this.reverseInheritAttributes(type);
-		}
-		
-		return extendedRelation;
-	}
-	*/
 	
 	@Override
 	public IRelation buildRelationFrom(IProject project) {
