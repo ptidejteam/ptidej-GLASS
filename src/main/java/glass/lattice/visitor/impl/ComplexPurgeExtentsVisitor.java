@@ -42,11 +42,15 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 	
 	private Set<Attribute> getInterfaceOutsideExtent(IType type, Set<Object> extent) {
 		Set<Attribute> attributesOutsideExtent = this.relationBuilder.getLocalAttributes(type);
+		IType[] superTypes = type.getAllSupertypes();
+		Set<Object> superTypesSet = new HashSet<Object>(Arrays.asList(superTypes));
+		Set<Object> filteredExtent = new HashSet<Object>(extent);
+		filteredExtent.removeIf(typeExtent -> (superTypesSet.contains(typeExtent)));
 		Set<Object> extentAndChild = new HashSet<Object>();
-		extentAndChild.addAll(extent);
+		extentAndChild.addAll(filteredExtent);
 		// To make sure we get independent occurrences, we have to be
-		// completely separated from the extent
-		for (Object objExtent : extent) {
+		// completely separated from the types in the extent that are below/unrelated to type
+		for (Object objExtent : filteredExtent) {
 			IType typeExtent = (IType) objExtent;
 			extentAndChild.addAll(Arrays.asList(typeExtent.getAllSubtypes()));
 		}
@@ -124,10 +128,13 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		}
 	}
 	
-	private void deleteAdhocAttributes(ILatticeNode node, Set<Object> attrToDelete) {
+	// TODO: debate whether or not I should also delete the attributes in the children
+	// From the point of view of the intent, the attributes from above are not adhoc?
+	// Makes senses to delete the extra attribute, even if the feature can be detected?
+	private void deleteAttributes(ILatticeNode node, Set<Object> attrToDelete) {
 		node.getIntent().removeAll(attrToDelete);
 		for (ILatticeNode child : node.getChildren()) {
-			this.deleteAdhocAttributes(child, attrToDelete);
+			this.deleteAttributes(child, attrToDelete);
 		}
 	}
 
@@ -172,14 +179,14 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 			Set<Object> reducedIntent = this.getIntroducedAdhocAttributes(node);
 			if (reducedIntent.size() > 0) {
 				node.setIntent(reducedIntent);
-				this.reduceExtent(node); // Since there is at least 1 new adhoc attribute, we are guaranteed to have extent > 1.
+				this.reduceExtent(node); // Since there is at least 1 new adhoc attribute, we are guaranteed to have |extent| > 1.
 				Set<Object> attrToDelete = new HashSet<Object>();
 				attrToDelete.addAll(intentCopy);
 				attrToDelete.removeAll(reducedIntent);
 				// We can delete the attributes from the parents, because if we don't find a feature
 				// with the big set of attributes, we won't find a feature in the children since they
-				// contain an even bigger set of attributes (I might be wrong?)
-				this.deleteAdhocAttributes(node, attrToDelete);
+				// contain an even bigger set of attributes (I might be wrong? -> yes I'm wrong)
+				this.deleteAttributes(node, attrToDelete);
 			}
 		}
 	}

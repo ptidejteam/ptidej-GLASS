@@ -54,12 +54,23 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 				this.propagateAttrDownward(type, extendedAttr);
 			}
 		}
+		for (IType type : this.definedTypes) {
+			Set<Attribute> inheritedAttrSet = this.inheritedAttrMap.get(type);
+			if (inheritedAttrSet == null) {
+				continue;
+			}
+			for (Attribute inheritedAttr : inheritedAttrSet) {
+				if (inheritedAttr.isExtendedAttribute()) {
+					this.propagateExtendedInheritedUppward(type, inheritedAttr);
+				}
+			}
+		}
 		return this.extendedRelation;
 	}
 	
 	private void propagateAttrUpward(IType type, Attribute attr) {
 		for (IType superType : type.getAllSupertypes()) {
-			this.addToAttrMap(superType, attr, inheritedAttrMap);
+			this.addToAttrMap(superType, attr, inheritedAttrMap); // probably should not be in here, since these should not be re-propagated
 			this.extendedRelation.addRelation(superType, attr);
 		}
 	}
@@ -74,6 +85,17 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 			if (normalAttrSet.contains(normalAttr)) {
 				this.addToAttrMap(subType, attr, inheritedAttrMap);
 				this.extendedRelation.addRelation(subType, attr);
+			}
+		}
+	}
+	
+	private void propagateExtendedInheritedUppward(IType type, Attribute attr) {
+		Attribute normalAttr = this.signatureAttrMap.get(attr.getName());
+		for (IType superType : type.getAllSupertypes()) {
+			Set<Attribute> normalAttrSet = this.normalAttrMap.get(superType);
+			if (normalAttrSet == null || !normalAttrSet.contains(normalAttr)) {
+				this.addToAttrMap(superType, attr, inheritedAttrMap);
+				this.extendedRelation.addRelation(superType, attr);
 			}
 		}
 	}

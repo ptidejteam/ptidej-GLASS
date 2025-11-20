@@ -11,6 +11,7 @@ import guru.nidi.graphviz.attribute.Font;
 import guru.nidi.graphviz.attribute.Rank;
 import guru.nidi.graphviz.attribute.Rank.RankDir;
 import guru.nidi.graphviz.attribute.Records;
+import guru.nidi.graphviz.attribute.Shape;
 import guru.nidi.graphviz.attribute.Style;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
@@ -81,7 +82,7 @@ public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
 				Records.of(turn(
 						rec("conceptName", "Concept_"+this.conceptCounter),
 						rec("extent", getStringExtent(latticeNode)),
-						rec("intent", getStringIntent(latticeNode)))));
+						rec("intent", getStringIntent(latticeNode))))).add(Shape.M_RECORD);
 		this.graphvizNodes.put(latticeNode, currentNode);
 		this.conceptCounter++;
 		return currentNode;
