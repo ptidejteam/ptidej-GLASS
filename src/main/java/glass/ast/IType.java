@@ -11,6 +11,13 @@ public interface IType {
 	public boolean isInterface();
 	
 	/**
+	 * A ghost is a type defined outside the analyzed project (e.g., String, Object,
+	 * or something from the dependencies).
+	 * @return
+	 */
+	public default boolean isGhost() {return false;};
+	
+	/**
 	 * Returns all local methods + inherited methods
 	 * @return
 	 */

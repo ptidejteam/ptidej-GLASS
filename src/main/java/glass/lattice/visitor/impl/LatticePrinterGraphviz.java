@@ -69,6 +69,9 @@ public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
 		final Iterator<Object> itIntent = nodeIntent.iterator();
 		while (itIntent.hasNext()) {
 			Attribute attr = (Attribute) itIntent.next();
+			if (attr.isExtendedAttribute()) {
+				continue;
+			}
 			if (attr.isAdhoc()) {
 				builder.append("ADHOC ");
 			}
