@@ -71,7 +71,9 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 	private void propagateAttrUpward(IType type, Attribute attr) {
 		for (IType superType : type.getAllSupertypes()) {
 			this.addToAttrMap(superType, attr, inheritedAttrMap); // probably should not be in here, since these should not be re-propagated
-			this.extendedRelation.addRelation(superType, attr);
+			if (!superType.isGhost()) {
+				this.extendedRelation.addRelation(superType, attr);
+			}
 		}
 	}
 	
@@ -84,8 +86,10 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 			Set<Attribute> normalAttrSet = this.normalAttrMap.get(subType);
 			if (normalAttrSet.contains(normalAttr)) {
 				this.addToAttrMap(subType, attr, inheritedAttrMap);
-				this.extendedRelation.addRelation(subType, attr);
-			}
+				if (!subType.isGhost()) {
+					this.extendedRelation.addRelation(subType, attr);
+				}
+			}	
 		}
 	}
 	
@@ -95,7 +99,9 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 			Set<Attribute> normalAttrSet = this.normalAttrMap.get(superType);
 			if (normalAttrSet == null || !normalAttrSet.contains(normalAttr)) {
 				this.addToAttrMap(superType, attr, inheritedAttrMap);
-				this.extendedRelation.addRelation(superType, attr);
+				if (!superType.isGhost()) {
+					this.extendedRelation.addRelation(superType, attr);
+				}
 			}
 		}
 	}

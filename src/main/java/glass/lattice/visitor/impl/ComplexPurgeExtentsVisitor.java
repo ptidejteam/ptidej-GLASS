@@ -46,6 +46,7 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		Set<Object> superTypesSet = new HashSet<Object>(Arrays.asList(superTypes));
 		Set<Object> filteredExtent = new HashSet<Object>(extent);
 		filteredExtent.removeIf(typeExtent -> (superTypesSet.contains(typeExtent)));
+		filteredExtent.remove(type);
 		Set<Object> extentAndChild = new HashSet<Object>();
 		extentAndChild.addAll(filteredExtent);
 		// To make sure we get independent occurrences, we have to be
@@ -169,9 +170,11 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 	public void processNode(ILatticeNode node) {
 		Set<Object> extentCopy = new HashSet<Object>();
 		Set<Object> intentCopy = new HashSet<Object>();
+		Set<Object> reducedExtent = new HashSet<Object>();
 		extentCopy.addAll(node.getExtent());
 		intentCopy.addAll(node.getIntent());
 		this.reduceExtent(node);
+		reducedExtent.addAll(node.getExtent());
 		// If we don't have a feature, we try to see if there are adhoc attributes introduced by the concept
 		// so we can still find an interesting subfeature that we would have missed otherwise
 		if (node.getExtent().size() == 1) {
@@ -187,6 +190,10 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 				// with the big set of attributes, we won't find a feature in the children since they
 				// contain an even bigger set of attributes (I might be wrong? -> yes I'm wrong)
 				this.deleteAttributes(node, attrToDelete);
+			}
+			else {
+				// if there is no new feature that is introduced, reset node to purged state
+				node.setExtent(reducedExtent);
 			}
 		}
 	}
