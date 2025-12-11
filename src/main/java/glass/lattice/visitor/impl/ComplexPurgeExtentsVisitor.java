@@ -55,12 +55,11 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 			IType typeExtent = (IType) objExtent;
 			extentAndChild.addAll(Arrays.asList(typeExtent.getAllSubtypes()));
 		}
-		for (IType subType : type.getDirectSubTypes()) {
+		for (IType subType : type.getAllSubtypes()) {
 			if (extentAndChild.contains(subType)) {
 				continue;
 			}
 			attributesOutsideExtent.addAll(this.relationBuilder.getLocalAttributes(subType));
-			attributesOutsideExtent.addAll(this.getInterfaceOutsideExtent(subType, extent));
 		}
 		return attributesOutsideExtent;
 	}

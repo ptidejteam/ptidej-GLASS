@@ -15,41 +15,61 @@ import guru.nidi.graphviz.attribute.Shape;
 import guru.nidi.graphviz.attribute.Style;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
-import guru.nidi.graphviz.model.MutableGraph;
-import guru.nidi.graphviz.model.MutableNode;
 import static guru.nidi.graphviz.attribute.Records.*;
 
+import static guru.nidi.graphviz.attribute.Attributes.attr;
 import static guru.nidi.graphviz.model.Factory.*;
+
+import guru.nidi.graphviz.attribute.Attributes;
+import guru.nidi.graphviz.model.MutableGraph;
+import guru.nidi.graphviz.model.MutableNode;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
-
+import java.util.stream.Collectors;
 
 /**
  * Visitor meant to produce an image from a given lattice.
  * This class uses the graphviz-java library, and traverses the lattice
  * FROM TOP TO BOTTOM (the other way doesn't work yet) to produce an svg image
  */
-public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
+public class LatticePrinterGraphviz extends AbstractVisitor
+		implements IVisitor {
 
 	private MutableGraph latticeGraph;
 	private String graphName;
 	private Map<ILatticeNode, MutableNode> graphvizNodes;
 	private int conceptCounter;
 	private boolean excludeTop;
-	
+	private Map<ILatticeNode, Integer> layerMapping;
+	private Queue<ILatticeNode> queueBFS = new ArrayDeque<ILatticeNode>();
+	private Queue<ILatticeNode> bufferQueue = new ArrayDeque<ILatticeNode>();
+	private Map<ILatticeNode, MutableNode> graphvizNodesNoLink;
+	private ILatticeNode top;
+	private Map<Integer, MutableGraph> subGraphMapping;
+
 	public LatticePrinterGraphviz(String graphName, boolean excludeTop) {
 		this.graphvizNodes = new HashMap<ILatticeNode, MutableNode>();
+		this.graphvizNodesNoLink = new HashMap<ILatticeNode, MutableNode>();
+		this.layerMapping = new HashMap<ILatticeNode, Integer>();
+		this.subGraphMapping = new HashMap<Integer, MutableGraph>();
 		this.conceptCounter = 0;
 		this.graphName = graphName;
 		this.excludeTop = excludeTop;
 		this.latticeGraph = mutGraph(graphName).setDirected(true)
 				.graphAttrs().add(Rank.dir(RankDir.BOTTOM_TO_TOP))
 				.nodeAttrs().add(Font.name("arial"));
+		this.latticeGraph.graphAttrs().add(attr("newrank", "true"));
+		this.latticeGraph.graphAttrs().add(attr("ranksep", "10"));
 	}
 	
 	private String getStringExtent(ILatticeNode latticeNode) {
@@ -66,15 +86,22 @@ public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
 	private String getStringIntent(ILatticeNode latticeNode) {
 		final StringBuilder builder = new StringBuilder();
 		final Set<Object> nodeIntent = latticeNode.getIntent();
-		final Iterator<Object> itIntent = nodeIntent.iterator();
-		while (itIntent.hasNext()) {
-			Attribute attr = (Attribute) itIntent.next();
-			if (attr.isExtendedAttribute()) {
-				continue;
-			}
-			if (attr.isAdhoc()) {
-				builder.append("ADHOC ");
-			}
+		// The following can probably be optimized but I'm lazy
+		final List<Object> listAdhoc = nodeIntent.stream()
+				.filter(attr -> ((Attribute) attr).isAdhoc())
+				.collect(Collectors.toCollection(ArrayList::new));
+		final List<Object> listNonAdhoc = nodeIntent.stream()
+				.filter(attr -> (!((Attribute) attr).isAdhoc() && (!((Attribute) attr).isExtendedAttribute())))
+				.collect(Collectors.toCollection(ArrayList::new));
+		listAdhoc.sort(Comparator.comparing(o -> o.toString()));
+		listNonAdhoc.sort(Comparator.comparing(o -> o.toString()));
+		for (Object attr : listAdhoc) {
+			builder.append(attr + "\n");
+		}
+		if (listNonAdhoc.size() > 0) {
+			builder.append("----------\n");
+		}
+		for (Object attr : listNonAdhoc) {
 			builder.append(attr + "\n");
 		}
 		return builder.toString();
@@ -109,6 +136,8 @@ public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
 			return;
 		}
 		MutableNode startingNode = null;
+		this.top = latticeNode;
+		this.queueBFS.add(this.top); // preparing the layeredSearch
 		if (!this.excludeTop) {
 			startingNode = this.createNode(latticeNode);
 		}
@@ -129,6 +158,7 @@ public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
 		}
 		
 		MutableNode currentNode = this.createNode(latticeNode);
+		this.graphvizNodesNoLink.put(latticeNode, currentNode.copy());
 		if (parent != null) {
 			this.linkNodes(currentNode, parent);
 		}
@@ -150,6 +180,53 @@ public class LatticePrinterGraphviz extends AbstractVisitor implements IVisitor{
 			e.printStackTrace();
 		}
 	}
+	
+	public void processResultsFeature() {
+		this.layeredSearchFromTop();
+		
+		for (ILatticeNode currentNode : this.graphvizNodes.keySet()) {
+			MutableNode currentGraphicNode = this.graphvizNodes.get(currentNode);
+			MutableNode currentGraphicNodeNoLink = this.graphvizNodesNoLink.get(currentNode);
+			int depth = this.layerMapping.get(currentNode);
+			if (depth == 0) {
+				continue;
+			}
+			MutableGraph subGraph = this.subGraphMapping.get(depth);
+			currentGraphicNode.addTo(this.latticeGraph);
+			currentGraphicNodeNoLink.addTo(subGraph);
+			//currentGraphicNode.addTo(subGraph);
+		}
+		try {
+			Graphviz.fromGraph(latticeGraph).render(Format.SVG).toFile(new File(this.graphName + ".svg"));
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void layeredSearchFromTop() { // this is a disaster
+		int depth = 0;
+		while (!(this.queueBFS.isEmpty())) {
+			ILatticeNode currentNode = this.queueBFS.poll();
+			this.layerMapping.put(currentNode, depth); // A node could be at different depths, we just want the max depth
+			for (ILatticeNode child : currentNode.getChildren()) {
+				this.bufferQueue.add(child);
+			}
+			if (this.queueBFS.isEmpty()) {
+				this.queueBFS.addAll(bufferQueue);
+				this.bufferQueue = new ArrayDeque<ILatticeNode>();
+				depth++;
+				MutableGraph subGraph = mutGraph(graphName + depth).setCluster(true)
+						.graphAttrs().add(Style.FILLED, Color.BLUE)
+						.nodeAttrs().add(Font.name("arial"));
+				subGraph.graphAttrs().add(attr("rank", "same"));
+				subGraph.addTo(this.latticeGraph);
+				this.subGraphMapping.put(depth, subGraph);
+			}
+		}
+	}
+	
+	
 
 
 	@Override

@@ -57,17 +57,21 @@ public class Attribute {
 
 	@Override
 	public String toString() {
-		if (!this.isExtendedAttribute) {
-			return name;
-		}
 		StringBuilder fullName = new StringBuilder();
-		if (this.isRoot) {
-			fullName.append("root ");
+		
+		if (this.isAdhoc) {
+			fullName.append("ADHOC ");
 		}
-		if (this.isLeaf) {
-			fullName.append("leaf ");
+		
+		if (this.isExtendedAttribute) {
+			if (this.isRoot) {
+				fullName.append("root ");
+			}
+			if (this.isLeaf) {
+				fullName.append("leaf ");
+			}
+			fullName.append(this.type.getFullyQualifiedName() + " ");
 		}
-		fullName.append(this.type.getFullyQualifiedName() + " ");
 		fullName.append(this.name);
 		return fullName.toString();
 	}
