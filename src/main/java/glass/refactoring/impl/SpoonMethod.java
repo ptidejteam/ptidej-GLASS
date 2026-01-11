@@ -63,4 +63,10 @@ public class SpoonMethod implements IMethod{
 		return this.method.isProtected();
 	}
 
+	@Override
+	public String getFullSignature() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

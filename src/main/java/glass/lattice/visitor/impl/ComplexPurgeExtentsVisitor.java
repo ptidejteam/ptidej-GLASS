@@ -23,7 +23,6 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 	private ExtendedRIRBuilder relationBuilder;
 	private Map<ILatticeNode, ILatticeNode> simplifiedConceptMapping;
 	
-	
 	public ComplexPurgeExtentsVisitor (ExtendedRIRBuilder builder, Map<ILatticeNode, ILatticeNode> simplifiedConceptMapping){
 		relationBuilder = builder;
 		this.simplifiedConceptMapping = simplifiedConceptMapping;
@@ -138,6 +137,17 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		}
 	}
 
+	// To remove soon
+	private Set<String> getNamesFromNode(ILatticeNode node) {
+		Set<Object> extent = node.getExtent();
+		Set<String> res = new HashSet<String>();
+		for (Object obj : extent) {
+			IType type = (IType) obj;
+			res.add(type.getFullyQualifiedName());
+		}
+		return res;
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * 

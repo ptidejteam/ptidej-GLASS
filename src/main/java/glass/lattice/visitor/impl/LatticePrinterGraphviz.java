@@ -30,6 +30,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,7 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 	private Map<ILatticeNode, MutableNode> graphvizNodesNoLink;
 	private ILatticeNode top;
 	private Map<Integer, MutableGraph> subGraphMapping;
+	//private Map<ILatticeNode, ILatticeNode> simplifiedConceptMapping;
 
 	public LatticePrinterGraphviz(String graphName, boolean excludeTop) {
 		this.graphvizNodes = new HashMap<ILatticeNode, MutableNode>();
@@ -64,6 +66,7 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 		this.subGraphMapping = new HashMap<Integer, MutableGraph>();
 		this.conceptCounter = 0;
 		this.graphName = graphName;
+		//this.simplifiedConceptMapping = simplifiedConceptMapping;
 		this.excludeTop = excludeTop;
 		this.latticeGraph = mutGraph(graphName).setDirected(true)
 				.graphAttrs().add(Rank.dir(RankDir.BOTTOM_TO_TOP))
@@ -82,6 +85,14 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 		}
 		return builder.toString();
 	}
+	/*
+	private Set<Object> getIntroducedAttributes(ILatticeNode node) {
+		final Set<Object> introducedAttr = new HashSet<Object>();
+		for (Object obj : node.getIntent()) {
+			
+		}
+	}
+	*/
 	
 	private String getStringIntent(ILatticeNode latticeNode) {
 		final StringBuilder builder = new StringBuilder();
@@ -192,9 +203,9 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 				continue;
 			}
 			MutableGraph subGraph = this.subGraphMapping.get(depth);
-			currentGraphicNode.addTo(this.latticeGraph);
-			currentGraphicNodeNoLink.addTo(subGraph);
-			//currentGraphicNode.addTo(subGraph);
+			//currentGraphicNode.addTo(this.latticeGraph);
+			//currentGraphicNodeNoLink.addTo(subGraph);
+			currentGraphicNode.addTo(subGraph);
 		}
 		try {
 			Graphviz.fromGraph(latticeGraph).render(Format.SVG).toFile(new File(this.graphName + ".svg"));
@@ -217,7 +228,7 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 				this.bufferQueue = new ArrayDeque<ILatticeNode>();
 				depth++;
 				MutableGraph subGraph = mutGraph(graphName + depth).setCluster(true)
-						.graphAttrs().add(Style.FILLED, Color.BLUE)
+						.graphAttrs().add(Style.FILLED, Color.BLANCHEDALMOND)
 						.nodeAttrs().add(Font.name("arial"));
 				subGraph.graphAttrs().add(attr("rank", "same"));
 				subGraph.addTo(this.latticeGraph);

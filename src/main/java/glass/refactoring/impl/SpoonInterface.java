@@ -173,4 +173,10 @@ public class SpoonInterface implements IType{
 		return this.methods;
 	}
 
+	@Override
+	public IType[] getDirectSubTypes() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
