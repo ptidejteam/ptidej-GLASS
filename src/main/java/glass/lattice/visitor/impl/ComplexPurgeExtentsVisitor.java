@@ -39,11 +39,14 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		return intentInterface;
 	}
 	
-	private Set<Attribute> getInterfaceOutsideExtent(IType type, Set<Object> extent) {
+	private Set<Attribute> getInterfaceOutsideExtent(IType type, Set<Object> fullExtent) {
+		// Subtlety : we always have to compare against the full extent, not the one
+		// that is in the process of getting reduced, or else the order on which
+		// we treat the types matters (it shouldn't)
 		Set<Attribute> attributesOutsideExtent = this.relationBuilder.getLocalAttributes(type);
 		IType[] superTypes = type.getAllSupertypes();
 		Set<Object> superTypesSet = new HashSet<Object>(Arrays.asList(superTypes));
-		Set<Object> filteredExtent = new HashSet<Object>(extent);
+		Set<Object> filteredExtent = new HashSet<Object>(fullExtent);
 		filteredExtent.removeIf(typeExtent -> (superTypesSet.contains(typeExtent)));
 		filteredExtent.remove(type);
 		Set<Object> extentAndChild = new HashSet<Object>();
@@ -81,6 +84,8 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		if (node.getIntent().isEmpty()) return;
 
 		Set<Object> intersection = null, extent = node.getExtent(), intent = node.getIntent();
+		Set<Object> extentCopy = new HashSet<Object>();
+		extentCopy.addAll(extent); // keep a copy of the full extent for later
 
 		ArrayList<Object> classesToProcess = new ArrayList<Object>();
 		classesToProcess.addAll(extent);
@@ -111,7 +116,7 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 			// part of the extent.
 			for (Object element: intersection){
 				IType type = (IType) element;
-				Set<Attribute> domainInterfaceNoExtent = this.getInterfaceOutsideExtent(type, extent);
+				Set<Attribute> domainInterfaceNoExtent = this.getInterfaceOutsideExtent(type, extentCopy);
 				if (!domainInterfaceNoExtent.containsAll(this.extractInterfaceFromNode(node))){
 					// indeed, this is the case where we need to remove the element from the extent
 					extent.remove(element);

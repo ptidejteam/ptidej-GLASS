@@ -111,7 +111,8 @@ public class AdhocFeatureDetectorVisitor extends AbstractVisitor implements IVis
 	}
 	
 	private boolean isAdhocCandidate(ILatticeNode node) {
-		// for a feature to be 'interesting' it has to have at least one more ad-hoc element,
+		// for a feature to be 'interesting' it has to have at 
+		// least one more ad-hoc element than its 'biggest' parent,
 		// or it should introduce a new adhoc attribute
 		int nbIntroducedAdhocElement = this.countAdhoc(this.simplifiedConceptMapping.get(node));
 		if (nbIntroducedAdhocElement > 0) {
