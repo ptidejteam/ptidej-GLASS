@@ -45,7 +45,7 @@ public class AdhocFeatureDetectorVisitor extends AbstractVisitor implements IVis
 			boolean isCandidate = true;
 			int nbAdhocElement = this.countAdhoc(node);
 			for (ILatticeNode candidateSuperfeature : this.getPotentialSuperfeature(node)) {
-				if (candidateSuperfeature.getExtent().size() == extentSize) {
+				if (candidateSuperfeature.getExtent().size() >= extentSize) { // There are edge cases where a super feature can have more occurrences
 					isCandidate = false;
 					break;
 				}
@@ -141,8 +141,8 @@ public class AdhocFeatureDetectorVisitor extends AbstractVisitor implements IVis
 		Set<Object> adhocElements = this.getAdhocElements(node);
 		for (ILatticeNode child : node.getChildren()) {
 			Set<Object> adhocEltChild = this.getAdhocElements(child);
-			if (adhocEltChild.containsAll(adhocElements) && adhocEltChild.size()>adhocElements.size()) {
-				potentialSuperfeatures.add(child);
+			if (adhocEltChild.size()>adhocElements.size()) { 	// By definition, a child will always contain the method
+				potentialSuperfeatures.add(child);				// of the concept above, so we don't need to check for that
 			}
 			else {
 				potentialSuperfeatures.addAll(this.getPotentialSuperfeature(child));

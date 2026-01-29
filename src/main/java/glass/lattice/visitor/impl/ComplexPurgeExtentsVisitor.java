@@ -180,6 +180,20 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		Set<Object> extentCopy = new HashSet<Object>();
 		Set<Object> intentCopy = new HashSet<Object>();
 		Set<Object> reducedExtent = new HashSet<Object>();
+		
+		// for debugging purposes ONLY, to be deleted
+		Set<String> names = new HashSet<String>();
+		for (Object obj : node.getExtent()) {
+			names.add(((IType) obj).getElementName());
+		}
+		Set<String> namesAttr = new HashSet<String>();
+		for (Object obj : node.getIntent()) {
+			Attribute attr = (Attribute) obj;
+			if (!attr.isExtendedAttribute()) {
+				namesAttr.add(attr.getName());
+			}
+		}
+		
 		extentCopy.addAll(node.getExtent());
 		intentCopy.addAll(node.getIntent());
 		this.reduceExtent(node);
