@@ -11,7 +11,6 @@ import glass.lattice.visitor.IVisitor;
 public class AdhocValidationVisitor extends AbstractVisitor implements IVisitor{
 
 	
-	
 	@Override
 	public void processNode(ILatticeNode node) {
 		Set<Object> intent = node.getIntent();

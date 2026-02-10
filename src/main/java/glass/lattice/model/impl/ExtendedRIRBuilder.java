@@ -157,6 +157,14 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 		
 		while (noDuplicates && i<otherTypes.length) {
 			IType otherType = otherTypes[i];
+			// For now, we don't process ghost types because I'm lazy
+			// In the future, we'd want to be able to tell if all the root attributes
+			// (derived from the same method) come from the same ghost, so we can
+			// tell that the attribute is adhoc, but only 'locally'
+			if (otherType.isGhost()) {
+				i++;
+				continue;
+			}
 			if (!this.localInterfaces.containsKey(otherType)) {
 				this.putLocalInterface(otherType);
 			}

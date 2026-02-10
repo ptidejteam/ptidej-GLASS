@@ -37,10 +37,13 @@ public class AdhocFeatureDetectorVisitor extends AbstractVisitor implements IVis
 	public void processNode(ILatticeNode node) {
 		int extentSize = node.getExtent().size();
 		if (extentSize > 1 && this.isAdhocCandidate(node)) {
-			Set<Attribute> intentAttributes= new HashSet<Attribute>();
+			Set<Attribute> intentAttributes = new HashSet<Attribute>();
+			Set<String> namesAttr = new HashSet<String>();
 			Set<Object> intent= node.getIntent();
-			for (Object obj : intent) {
-				intentAttributes.add((Attribute) obj);
+			for (Object obj : intent) { // For debugging purposes only
+				Attribute attr = (Attribute) obj;
+				intentAttributes.add(attr);
+				namesAttr.add(attr.getName());
 			}
 			boolean isCandidate = true;
 			int nbAdhocElement = this.countAdhoc(node);
@@ -114,6 +117,9 @@ public class AdhocFeatureDetectorVisitor extends AbstractVisitor implements IVis
 		// for a feature to be 'interesting' it has to have at 
 		// least one more ad-hoc element than its 'biggest' parent,
 		// or it should introduce a new adhoc attribute
+		// (even if a new attriute is introduced, there could
+		// be less adhoc elements than in the parents,
+		// cf., ComplexPurgeExtentsVisitor)
 		int nbIntroducedAdhocElement = this.countAdhoc(this.simplifiedConceptMapping.get(node));
 		if (nbIntroducedAdhocElement > 0) {
 			return true;
@@ -146,7 +152,7 @@ public class AdhocFeatureDetectorVisitor extends AbstractVisitor implements IVis
 				potentialSuperfeatures.add(child);				// of the concept above, so we don't need to check for that
 			}
 			else {
-				potentialSuperfeatures.addAll(this.getPotentialSuperfeature(child));
+				potentialSuperfeatures.addAll(this.getPotentialSuperfeature(child)); // is this valid?
 			}
 		}
 		return potentialSuperfeatures;

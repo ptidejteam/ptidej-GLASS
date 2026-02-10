@@ -42,7 +42,7 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 	private Set<Attribute> getInterfaceOutsideExtent(IType type, Set<Object> fullExtent) {
 		// Subtlety : we always have to compare against the full extent, not the one
 		// that is in the process of getting reduced, or else the order on which
-		// we treat the types matters (it shouldn't)
+		// we treat the types matter (it shouldn't)
 		Set<Attribute> attributesOutsideExtent = this.relationBuilder.getLocalAttributes(type);
 		IType[] superTypes = type.getAllSupertypes();
 		Set<Object> superTypesSet = new HashSet<Object>(Arrays.asList(superTypes));
@@ -51,8 +51,8 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 		filteredExtent.remove(type);
 		Set<Object> extentAndChild = new HashSet<Object>();
 		extentAndChild.addAll(filteredExtent);
-		// To make sure we get independent occurrences, we have to be
-		// completely separated from the types in the extent that are below/unrelated to type
+		// To make sure we get independent occurrences, we have to be completely
+		// separated from the types in the extent that are below/unrelated to our type
 		for (Object objExtent : filteredExtent) {
 			IType typeExtent = (IType) objExtent;
 			extentAndChild.addAll(Arrays.asList(typeExtent.getAllSubtypes()));
@@ -134,7 +134,7 @@ public class ComplexPurgeExtentsVisitor extends AbstractVisitor implements IVisi
 	
 	// TODO: debate whether or not I should also delete the attributes in the children
 	// From the point of view of the intent, the attributes from above are not adhoc?
-	// Makes senses to delete the extra attribute, even if the feature can be detected?
+	// Makes sense to delete the extra attribute, even if the feature can be detected?
 	private void deleteAttributes(ILatticeNode node, Set<Object> attrToDelete) {
 		node.getIntent().removeAll(attrToDelete);
 		for (ILatticeNode child : node.getChildren()) {
