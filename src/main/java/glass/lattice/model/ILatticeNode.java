@@ -71,4 +71,7 @@ public interface ILatticeNode {
 	public void setName(String name);
 	public List<NodeFeatureType> getTypes();
 	public void setTypes(List<NodeFeatureType> types);
+	
+	public void setMetric(double metric);
+	public double getMetric();
 }

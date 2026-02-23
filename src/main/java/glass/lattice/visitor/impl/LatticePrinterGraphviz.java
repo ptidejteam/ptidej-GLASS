@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -57,6 +58,7 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 	private Map<ILatticeNode, MutableNode> graphvizNodesNoLink;
 	private ILatticeNode top;
 	private Map<Integer, MutableGraph> subGraphMapping;
+	private List<List<ILatticeNode>> layers;
 	//private Map<ILatticeNode, ILatticeNode> simplifiedConceptMapping;
 
 	public LatticePrinterGraphviz(String graphName, boolean excludeTop) {
@@ -123,7 +125,7 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 				Records.of(turn(
 						rec("conceptName", "Concept_"+this.conceptCounter),
 						rec("extent", getStringExtent(latticeNode)),
-						rec("intent", getStringIntent(latticeNode))))).add(Shape.M_RECORD);
+						rec("intent", getStringIntent(latticeNode))))).add(Shape.M_RECORD).add(Style.FILLED);
 		this.graphvizNodes.put(latticeNode, currentNode);
 		this.conceptCounter++;
 		return currentNode;
@@ -194,13 +196,13 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 	
 	public void processResultsFeature() {
 		this.layeredSearchFromTop();
-		
+		this.setColorsPerLayers();
 		for (ILatticeNode currentNode : this.graphvizNodes.keySet()) {
 			MutableNode currentGraphicNode = this.graphvizNodes.get(currentNode);
-			MutableNode currentGraphicNodeNoLink = this.graphvizNodesNoLink.get(currentNode);
+			//MutableNode currentGraphicNodeNoLink = this.graphvizNodesNoLink.get(currentNode);
 			int depth = this.layerMapping.get(currentNode);
 			if (depth == 0) {
-				continue;
+				continue; // The top node is not a feature
 			}
 			MutableGraph subGraph = this.subGraphMapping.get(depth);
 			//currentGraphicNode.addTo(this.latticeGraph);
@@ -217,6 +219,7 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 	
 	private void layeredSearchFromTop() { // this is a disaster
 		int depth = 0;
+		this.layers = new ArrayList<List<ILatticeNode>>();
 		while (!(this.queueBFS.isEmpty())) {
 			ILatticeNode currentNode = this.queueBFS.poll();
 			this.layerMapping.put(currentNode, depth); // A node could be at different depths, we just want the max depth
@@ -233,6 +236,38 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 				subGraph.graphAttrs().add(attr("rank", "same"));
 				subGraph.addTo(this.latticeGraph);
 				this.subGraphMapping.put(depth, subGraph);
+				this.layers.add(new ArrayList<ILatticeNode>());
+			}
+		}
+		for (Entry<ILatticeNode, Integer> e : this.layerMapping.entrySet()) {
+			this.layers.get(e.getValue()).add(e.getKey());
+		}
+	}
+	
+	private void setColorsPerLayers() {
+		for (List<ILatticeNode> layer : this.layers) {
+			if (layer.contains(this.top)) {
+				continue;
+			}
+			double minMetric = layer.get(0).getMetric();
+			double maxMetric = minMetric;
+			for (ILatticeNode node : layer) {
+				double nodeMetric = node.getMetric();
+				if (nodeMetric < minMetric) {
+					minMetric = nodeMetric;
+				}
+				if (nodeMetric > maxMetric) {
+					maxMetric = nodeMetric;
+				}
+			}
+			for (ILatticeNode node : layer) {
+				MutableNode graphicNode = this.graphvizNodes.get(node);
+				if (minMetric == maxMetric) {
+					graphicNode.add(Color.rgb(0, 0, 255));
+				} else {
+					int nonBlueColor = (int) (255 * (1 - ((node.getMetric() - minMetric) / (maxMetric - minMetric))));
+					graphicNode.add(Color.rgb(nonBlueColor, nonBlueColor, 255));
+				}
 			}
 		}
 	}
@@ -254,8 +289,6 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 	 */
 	@Override
 	public void processNode(ILatticeNode node) {
-		// TODO Auto-generated method stub
-		
 	}
 
 }

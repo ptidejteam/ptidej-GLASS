@@ -20,6 +20,8 @@ public class LatticeNode implements ILatticeNode{
 	private Set<ILatticeNode> children;
 	private List<NodeFeatureType> types = new ArrayList<NodeFeatureType>();
 	
+	private double metric;
+	
 	public LatticeNode() {
 		intent = new HashSet<Object>();
 		extent = new HashSet<Object>();
@@ -175,6 +177,14 @@ public class LatticeNode implements ILatticeNode{
 	@Override
 	public void setTypes(List<NodeFeatureType> types) {
 		this.types = types;
+	}
+
+	public double getMetric() {
+		return metric;
+	}
+
+	public void setMetric(double metric) {
+		this.metric = metric;
 	}
 
 }

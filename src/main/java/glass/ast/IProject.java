@@ -11,6 +11,7 @@ import java.util.Collection;
 public interface IProject {
 
 	public Collection<IType> getDefinedTypes();
+	public Collection<IType> getGhostTypes();
 	/**
 	 * Returns the first type (excluding secondary types) found following
 	 * this project's classpath with the given fully qualified name
