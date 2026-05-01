@@ -129,6 +129,7 @@ public class Relation implements IRelation{
 			// remove the last character which is the extraneous ","
 			buffer.deleteCharAt(buffer.length() - 1);
 			buffer.append(" ]\n");
+			buffer.append("Number of elements: " + image.size() + "\n");
 		}
 		
 		return buffer.toString();

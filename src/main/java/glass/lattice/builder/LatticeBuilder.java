@@ -4,9 +4,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
 
+import glass.ast.IType;
 import glass.lattice.model.ILattice;
 import glass.lattice.model.ILatticeNode;
 import glass.lattice.model.IRelation;
+import glass.lattice.model.impl.Attribute;
 import glass.lattice.model.impl.Lattice;
 import glass.lattice.model.impl.LatticeNode;
 import glass.lattice.visitor.impl.BucketFillerVisitor;

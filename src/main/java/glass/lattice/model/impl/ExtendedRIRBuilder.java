@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import glass.ast.IMethod;
@@ -57,8 +59,8 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 				this.propagateAttrUpward(type, normalAttr);
 			}
 			for (Attribute extendedAttr : this.extendedAttrMap.get(type)) {
-				this.propagateAttrDownward(type, extendedAttr);
 				this.propagateAttrUpward(type, extendedAttr);
+				this.propagateAttrDownward(type, extendedAttr);
 			}
 		}
 		for (IType type : this.definedTypes) {
@@ -77,7 +79,7 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 	
 	private void propagateAttrUpward(IType type, Attribute attr) {
 		for (IType superType : type.getAllSupertypes()) {
-			this.addToAttrMap(superType, attr, inheritedAttrMap); // probably should not be in here, since these should not be re-propagated
+			// this.addToAttrMap(superType, attr, inheritedAttrMap); // probably should not be in here, since these should not be re-propagated
 			if (!superType.isGhost()) {
 				this.extendedRelation.addRelation(superType, attr);
 			}

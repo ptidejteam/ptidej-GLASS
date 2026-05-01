@@ -64,4 +64,6 @@ public interface IVisitor {
 	 * the opportunity to clean that data to prepare it for other visits.
 	 */
 	public void reset() ;
+	
+	public int getNbConcepts();
 }

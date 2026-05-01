@@ -11,8 +11,8 @@ public abstract class AbstractVisitor implements IVisitor{
 	 * a set that stores the visited nodes
 	 */
 	private Set<ILatticeNode> visitedNodes = new HashSet<ILatticeNode>();
-
 	private Direction currentDirection = Direction.Undefined;
+	private int conceptCounter = 0;
 
 	@Override
 	public void visitLatticeFromTop(ILattice aLattice) {
@@ -62,6 +62,7 @@ public abstract class AbstractVisitor implements IVisitor{
 
 		// set the node to visited
 		visitedNodes.add(latticeNode);
+		this.conceptCounter ++;
 
 		switch (direction) {
 		case TopDown:
@@ -136,5 +137,9 @@ public abstract class AbstractVisitor implements IVisitor{
 	public void reset() {
 		visitedNodes = new HashSet<ILatticeNode>();
 		currentDirection = Direction.Undefined;
+	}
+	
+	public int getNbConcepts() {
+		return this.conceptCounter;
 	}
 }
