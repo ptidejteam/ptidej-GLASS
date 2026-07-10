@@ -30,7 +30,7 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 	private Map<Object, Set<Attribute>> inheritedAttrMap;
 	private Map<Object, Set<Attribute>> reverseInheritedAttrMap;
 	private Map<Object, Set<Attribute>> signatureAndTypeToInheritedAttrMap;
-	private Set<String> objectMethods;
+	private Set<String> nonDesirableMethods;
 	
 	public ExtendedRIRBuilder() {
 		this.extendedRelation = new Relation();
@@ -41,7 +41,9 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 		this.inheritedAttrMap = new HashMap<Object, Set<Attribute>>();
 		this.signatureAndTypeToInheritedAttrMap = new HashMap<Object, Set<Attribute>>();
 		this.reverseInheritedAttrMap = new HashMap<Object, Set<Attribute>>();
-		this.objectMethods = ExtendedRIRBuilder.getObjectMethods();
+		this.nonDesirableMethods = ExtendedRIRBuilder.getObjectMethods();
+		this.nonDesirableMethods.add("void <clinit>()");
+		this.nonDesirableMethods.add("void <init>()");
 	}
 	
 	@Override
@@ -141,7 +143,7 @@ public class ExtendedRIRBuilder implements IRelationBuilder {
 		this.putLocalInterface(type);
 		for (IMethod method : type.getLocalMethods()) {
 			String signature = method.getSignature();
-			if (this.objectMethods.contains(signature)) { // filter out methods from java.lang.Object
+			if (this.nonDesirableMethods.contains(signature)) { // filter out methods from java.lang.Object
 				continue;
 			}
 			if (!this.signatureAttrMap.containsKey(signature)) {

@@ -98,6 +98,7 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 	
 	private String getStringIntent(ILatticeNode latticeNode) {
 		final StringBuilder builder = new StringBuilder();
+		builder.append("----------\n");
 		final Set<Object> nodeIntent = latticeNode.getIntent();
 		// The following can probably be optimized but I'm lazy
 		final List<Object> listAdhoc = nodeIntent.stream()
@@ -231,7 +232,7 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 				this.bufferQueue = new ArrayDeque<ILatticeNode>();
 				depth++;
 				MutableGraph subGraph = mutGraph(graphName + depth).setCluster(true)
-						.graphAttrs().add(Style.FILLED, Color.BLANCHEDALMOND)
+						.graphAttrs().add(Style.FILLED, Color.PALEGREEN)
 						.nodeAttrs().add(Font.name("arial"));
 				subGraph.graphAttrs().add(attr("rank", "same"));
 				subGraph.addTo(this.latticeGraph);
@@ -262,11 +263,16 @@ public class LatticePrinterGraphviz extends AbstractVisitor
 			}
 			for (ILatticeNode node : layer) {
 				MutableNode graphicNode = this.graphvizNodes.get(node);
+				Color fontColor = Color.WHITE.font();
+				Integer nonBlueColor = null;
 				if (minMetric == maxMetric) {
-					graphicNode.add(Color.rgb(0, 0, 255));
+					nonBlueColor = 0;
 				} else {
-					int nonBlueColor = (int) (255 * (1 - ((node.getMetric() - minMetric) / (maxMetric - minMetric))));
-					graphicNode.add(Color.rgb(nonBlueColor, nonBlueColor, 255));
+					nonBlueColor = (int) ((255 * (1 - ((node.getMetric() - minMetric) / (maxMetric - minMetric)))));
+				}
+				graphicNode.add(Color.rgb(nonBlueColor, nonBlueColor, 255));
+				if (nonBlueColor < 120) {
+					graphicNode.add(fontColor);
 				}
 			}
 		}
